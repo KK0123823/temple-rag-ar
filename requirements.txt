@@ -11,8 +11,6 @@ numpy==2.2.6
 requests==2.32.5
 tqdm==4.67.1
 
-edge-tts
-python-multipart
 python-dotenv
-
+python-multipart
 opencc-python-reimplemented
