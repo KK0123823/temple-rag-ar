@@ -284,41 +284,16 @@ def rag_find(
 def ask(req: AskRequest):
     entity_in = (req.entity or "廟公").strip()
 
-    search_ent = entity_in if entity_in in DEITY_ENTITIES else None
-
-    raw_contexts = query_chroma(
-        query_text=req.query,
-        top_k=req.top_k,
-        entity=search_ent
-    )
-
-    vector_ctx = _filter_contexts(raw_contexts)
-
+    raw_contexts = []
+    vector_ctx = []
     entity_fallback = False
-
-    if (not vector_ctx) and search_ent:
-        raw2 = query_chroma(
-            query_text=req.query,
-            top_k=req.top_k,
-            entity=None
-        )
-
-        vector_ctx2 = _filter_contexts(raw2)
-
-        if vector_ctx2:
-            vector_ctx = vector_ctx2
-            entity_fallback = True
 
     keyword_ctx = _keyword_candidates(
         req.query,
-        limit=max(4, req.top_k // 2)
+        limit=max(6, req.top_k)
     )
 
-    contexts = _merge_contexts(
-        keyword_ctx=keyword_ctx,
-        vector_ctx=vector_ctx,
-        final_limit=max(req.top_k, 8)
-    )
+    contexts = keyword_ctx[:max(req.top_k, 8)]
 
     kids, panel = _build_answer(
         query=req.query,
@@ -334,14 +309,6 @@ def ask(req: AskRequest):
         if file_name and file_name not in used_files:
             used_files.append(file_name)
 
-    top_distance = None
-
-    if vector_ctx:
-        try:
-            top_distance = float(vector_ctx[0].get("distance"))
-        except Exception:
-            top_distance = None
-
     return {
         "ok": True,
         "kids": kids,
@@ -349,7 +316,7 @@ def ask(req: AskRequest):
         "character": entity_in,
         "rag_used": bool(contexts),
         "matches": len(contexts),
-        "top_distance": top_distance,
+        "top_distance": None,
         "rag_max_distance": RAG_MAX_DISTANCE,
         "entity_fallback": entity_fallback,
         "raw_matches": len(raw_contexts),
