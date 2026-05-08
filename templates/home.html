@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ title or "廟宇智慧系統" }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- 使用簡單的 Tailwind CDN，方便排版；如果不想用也可以移除 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <!-- 標題 -->
+    <header class="space-y-2">
+      <h1 class="text-3xl font-bold">歡迎來到「廟宇智慧系統」</h1>
+      <p class="text-sm text-slate-600">
+        結合 AI 語言助教，讓廟宇文化變成輕鬆好理解的學習夥伴。<br />
+        在下方輸入你想問的問題，我會先用「專業版」再用「小學生版」解釋，並自動推薦相關圖片。
+      </p>
+    </header>
+
+    <!-- 問題輸入 -->
+    <section class="bg-white rounded-xl shadow-sm p-4 space-y-3">
+      <label class="block text-sm font-medium text-slate-700 mb-1">
+        示範問題：為什麼廟有三個門？
+      </label>
+
+      <div class="flex gap-2">
+        <input
+          id="question-input"
+          type="text"
+          value="為甚麼廟有三個門？"
+          class="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
+          placeholder="請輸入你想問的問題，例如：三川殿是甚麼？"
+        />
+        <button
+          id="ask-btn"
+          class="px-5 py-2 text-sm rounded-lg bg-pink-500 text-white font-medium hover:bg-pink-600 active:bg-pink-700"
+        >
+          送出
+        </button>
+      </div>
+      <p class="text-xs text-slate-500">
+        小提醒：系統會同時查詢文字知識庫與廟宇建築圖片，處理時間可能需要幾秒鐘。
+      </p>
+    </section>
+
+    <!-- 問題標題 -->
+    <section class="bg-white rounded-xl shadow-sm p-4">
+      <h2 class="text-lg font-semibold mb-1" id="question-title">為甚麼廟有三個門？</h2>
+      <p class="text-xs text-slate-500">
+        （以下內容來自廟宇知識庫與 AI 語言助教）
+      </p>
+    </section>
+
+    <!-- 專業版說明 -->
+    <section class="bg-white rounded-xl shadow-sm p-4">
+      <h3 class="text-base font-semibold mb-2">專業版說明</h3>
+      <p id="pro-answer" class="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">
+        請輸入問題後，我會根據廟宇知識庫整理專業版說明。
+      </p>
+    </section>
+
+    <!-- 小學生版說明 -->
+    <section class="bg-white rounded-xl shadow-sm p-4">
+      <h3 class="text-base font-semibold mb-2">小學生版說明</h3>
+      <p id="kid-answer" class="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">
+        小學生版說明會顯示在這裡，請稍後再試。
+      </p>
+    </section>
+
+    <!-- 參考資料 -->
+    <section class="bg-white rounded-xl shadow-sm p-4">
+      <h3 class="text-base font-semibold mb-2">參考資料</h3>
+      <ul id="ref-list" class="list-disc list-inside text-sm text-slate-700 space-y-1">
+        <li class="text-slate-400">目前尚未查詢。</li>
+      </ul>
+    </section>
+
+    <!-- 相關圖片 -->
+    <section class="bg-white rounded-xl shadow-sm p-4">
+      <h3 class="text-base font-semibold mb-2">相關圖片</h3>
+      <div id="img-list" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <!-- 動態插入 -->
+      </div>
+      <p id="img-empty" class="text-xs text-slate-400 mt-2">
+        圖片將會依照問題自動推薦。
+      </p>
+    </section>
+  </div>
+
+  <script>
+    async function askQuestion() {
+      const input = document.getElementById('question-input');
+      const q = input.value.trim();
+      if (!q) return;
+
+      // 更新標題
+      document.getElementById('question-title').innerText = q || '我的問題';
+
+      // 清空舊內容
+      document.getElementById('pro-answer').innerText = '查詢中，請稍候…';
+      document.getElementById('kid-answer').innerText = '小學生版生成中，請稍候…';
+      document.getElementById('ref-list').innerHTML =
+        '<li class="text-slate-400">載入中…</li>';
+      document.getElementById('img-list').innerHTML = '';
+      document.getElementById('img-empty').innerText = '圖片載入中…';
+
+      const body = JSON.stringify({ question: q, top_k: 5 });
+
+      try {
+        // 同時發出三個請求：專業版、小學生版、圖片
+        const [proRes, kidRes, imgRes] = await Promise.all([
+          fetch('/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+          }).then((r) => r.json()),
+          fetch('/ask-kid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+          }).then((r) => r.json()),
+          fetch(
+            '/search/images?' +
+              new URLSearchParams({
+                query: q,
+                top_k: '6',
+              }),
+          ).then((r) => r.json()),
+        ]);
+
+        // 專業版
+        document.getElementById('pro-answer').innerText =
+          proRes.answer && proRes.answer.trim()
+            ? proRes.answer
+            : '查無與問題相關的文字資料。';
+
+        // 小學生版
+        const kid =
+          kidRes.kid_answer && kidRes.kid_answer.trim()
+            ? kidRes.kid_answer
+            : '小學生版回應無法取得，請稍後再試。';
+        document.getElementById('kid-answer').innerText = kid;
+
+        // 參考資料
+        const refList = document.getElementById('ref-list');
+        refList.innerHTML = '';
+        if (proRes.sources && proRes.sources.length > 0) {
+          proRes.sources.forEach((s, idx) => {
+            const li = document.createElement('li');
+            li.textContent =
+              `來源 ${idx + 1}：` +
+              (s.file || '未知檔案') +
+              (s.topic ? `（主題：${s.topic}）` : '') +
+              (typeof s.index === 'number' ? `，段落 ${s.index}` : '');
+            refList.appendChild(li);
+          });
+        } else {
+          refList.innerHTML =
+            '<li class="text-slate-400">查詢不到相關文字資料。</li>';
+        }
+
+        // 圖片
+        const imgList = document.getElementById('img-list');
+        imgList.innerHTML = '';
+        if (imgRes.results && imgRes.results.length > 0) {
+          imgRes.results.forEach((item) => {
+            const container = document.createElement('div');
+            container.className = 'flex flex-col items-center text-xs';
+
+            const img = document.createElement('img');
+            // 將絕對路徑轉成 /images/{category}/{filename.ext}
+            const category = item.category || '建築';
+            const filename = item.filename || '未知';
+            const ext = item.ext || '.jpg';
+            img.src = `/images/${encodeURIComponent(category)}/${encodeURIComponent(
+              filename + ext,
+            )}`;
+            img.alt = filename;
+            img.className =
+              'w-full h-32 object-cover rounded-lg border border-slate-200';
+
+            const cap = document.createElement('div');
+            cap.className = 'mt-1 text-slate-700';
+            cap.textContent = `建築・${filename}`;
+
+            container.appendChild(img);
+            container.appendChild(cap);
+            imgList.appendChild(container);
+          });
+
+          document.getElementById('img-empty').innerText = '';
+        } else {
+          document.getElementById('img-empty').innerText = '圖片搜尋失敗，或沒有找到相關圖片。';
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('pro-answer').innerText =
+          '查詢過程發生錯誤，請稍後再試。';
+        document.getElementById('kid-answer').innerText =
+          '小學生版回應無法取得，請稍後再試。';
+        document.getElementById('ref-list').innerHTML =
+          '<li class="text-slate-400">查詢失敗。</li>';
+        document.getElementById('img-empty').innerText = '圖片搜尋失敗。';
+      }
+    }
+
+    document.getElementById('ask-btn').addEventListener('click', askQuestion);
+    document
+      .getElementById('question-input')
+      .addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') askQuestion();
+      });
+  </script>
+</body>
+</html>

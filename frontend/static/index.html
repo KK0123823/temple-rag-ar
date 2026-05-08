@@ -1,0 +1,115 @@
+<!-- frontend/static/index.html -->
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>廟宇小學堂</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="title">廟宇小學堂</div>
+      <div class="subtitle">給國小學生看的神明與廟宇小百科（AI 問答）</div>
+    </div>
+    <div class="badge">Local AI</div>
+  </header>
+
+  <main class="card">
+    <div class="row">
+      <div class="col-grow">
+        <div class="label">你想問什麼？</div>
+        <input id="q" class="input" placeholder="例如：媽祖有哪些禁忌？ / 三川殿是什麼？" />
+      </div>
+
+      <button id="btnAsk" class="btn primary">提問</button>
+
+      <!-- 語音輸入 -->
+      <button id="btnMic" class="btn icon" title="語音輸入">🎤</button>
+
+      <!-- 再播一次 -->
+      <button id="btnReplay" class="btn icon" title="再播一次">🔁</button>
+
+      <!-- 暫停/繼續 -->
+      <button id="btnPause" class="btn icon" title="暫停/繼續">⏯</button>
+    </div>
+
+    <div class="row row-gap">
+      <div class="field">
+        <div class="small">神明/主題（可不選）</div>
+        <select id="selEntity" class="select">
+          <option value="">自動判斷</option>
+          <option value="媽祖">媽祖</option>
+          <option value="文昌帝君">文昌帝君</option>
+          <option value="財神爺">財神爺</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="small">類別（可不選）</div>
+        <select id="selSection" class="select">
+          <option value="">自動判斷</option>
+          <option value="禁忌">禁忌</option>
+          <option value="歷史">歷史</option>
+          <option value="文化活動">文化活動</option>
+          <option value="建築">建築</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="small">Top-K</div>
+        <select id="selTopK" class="select">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+          <option value="6">6</option>
+          <option value="8">8</option>
+        </select>
+      </div>
+
+      <label class="check">
+        <input id="chkAutoSpeak" type="checkbox" checked />
+        自動朗讀（語音輸出）
+      </label>
+
+      <label class="check">
+        <input id="chkUseLLM" type="checkbox" checked />
+        使用 LLM 生成回答
+      </label>
+    </div>
+
+    <div id="hint" class="hint"></div>
+
+    <div class="avatarRow">
+      <img id="avatarImg" class="avatar" src="/static/avatars/default.png" alt="avatar" />
+      <div>
+        <div id="avatarName" class="avatarName">廟公</div>
+        <div class="avatarDesc">（會依你的主題自動換角色：媽祖 / 文昌帝君 / 財神爺 / 建築）</div>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="sectionTitle">回答</div>
+      <div id="kidsBox" class="answerBox">(尚未回答)</div>
+    </section>
+
+    <details class="details" id="detailPanel">
+      <summary>詳細回答（點開查看）</summary>
+      <div id="detailBox" class="detailBox">(尚未回答)</div>
+    </details>
+
+    <details class="details">
+      <summary>引用資料（citations）</summary>
+      <div id="citeBox" class="citeBox"></div>
+    </details>
+
+    <div class="footer">
+      <div>Temple-RAG・本機端執行</div>
+      <a class="link" href="/docs" target="_blank" rel="noreferrer">API Docs</a>
+    </div>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
