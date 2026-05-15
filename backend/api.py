@@ -22,7 +22,7 @@ from backend.llm_ollama import (
     generate_kids_and_detail,
     sanitize_citations_in_text,
 )
-from .stt_router import router as stt_router
+#from .stt_router import router as stt_router
 
 
 app = FastAPI(title="Lecheng-Temple-API")
@@ -37,7 +37,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(stt_router)
+#app.include_router(stt_router)
 
 RAG_MAX_DISTANCE = float(os.getenv("RAG_MAX_DISTANCE", "0.65"))
 
