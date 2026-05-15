@@ -1,0 +1,11 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "使用 Chrome 開啟 HTML",
+            "file": "${file}" // 這會開啟你當前在編輯器中選中的 HTML 檔案
+        }
+    ]
+}

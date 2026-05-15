@@ -14,3 +14,4 @@ tqdm==4.67.1
 python-dotenv
 python-multipart
 opencc-python-reimplemented
+edge-tts

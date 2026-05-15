@@ -167,3 +167,16 @@ body{
   font-size:12px;
 }
 .link{color:var(--primary);text-decoration:none;font-weight:800}
+
+details summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::marker {
+  content: "";
+}
